@@ -65,6 +65,7 @@ func main() {
 		fmt.Println("Error while reading the file")
 		return
 	}
+	defer f.Close()
 
 	safeLines := 0
 

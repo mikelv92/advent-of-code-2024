@@ -48,6 +48,7 @@ func main() {
 		fmt.Println("Error while reading the file")
 		return
 	}
+	defer f.Close()
 
 	locations1 := make([]int, 0)
 	locations2 := make([]int, 0)
