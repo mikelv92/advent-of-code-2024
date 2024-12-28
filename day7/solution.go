@@ -43,8 +43,7 @@ func main() {
 	}
 	defer f.Close()
 
-	result := make(map[int]bool, 0)
-	r := 0
+	result := 0
 
 	for i := 0; ; i++ {
 		reachedEOF := false
@@ -65,6 +64,11 @@ func main() {
 			return
 		}
 		operandsString := strings.Split(tokens[1][1:], " ")
+
+		combinations := make([][]rune, 0)
+
+		backtrack(len(operandsString), []rune{}, &combinations)
+
 		operands := make([]int, 0)
 		for _, o := range operandsString {
 			operand, err := strconv.Atoi(o)
@@ -75,31 +79,49 @@ func main() {
 			operands = append(operands, operand)
 		}
 
-		backtrack(i, target, operands, operands[0], 1, result)
-		if a, ok := result[i]; ok && a {
-			r += target
+		for _, combination := range combinations {
+			combinationResult := operands[0]
+			for i, operator := range combination {
+				if operator == '*' {
+					combinationResult *= operands[i+1]
+				} else if operator == '+' {
+					combinationResult += operands[i+1]
+				} else {
+					combinationResultString := strconv.Itoa(combinationResult)
+					combinationResultString += strconv.Itoa(operands[i+1])
+					combinationResult, err = strconv.Atoi(combinationResultString)
+					if err != nil {
+						fmt.Printf("Error while converting Atoi: %s", combinationResultString)
+						return
+					}
+				}
+			}
+
+			if combinationResult == target {
+				result += combinationResult
+				break
+			}
 		}
 
 		if reachedEOF {
 			break
 		}
 	}
-	fmt.Println(r)
+
+	fmt.Println(result)
 }
 
-func backtrack(key int, target int, operands []int, s int, index int, result map[int]bool) {
-	if index == len(operands) {
-		if s == target {
-			result[key] = true
-		}
+func backtrack(operandsLength int, currentCombination []rune, combinations *[][]rune) {
+	if len(currentCombination) == operandsLength-1 {
+		newSlice := make([]rune, len(currentCombination))
+		copy(newSlice, currentCombination)
+		*combinations = append(*combinations, newSlice)
 		return
 	}
 
-	for _, operator := range []rune{'+', '*'} {
-		if operator == '+' {
-			backtrack(key, target, operands, s+operands[index], index+1, result)
-		} else if operator == '*' {
-			backtrack(key, target, operands, s*operands[index], index+1, result)
-		}
+	for _, operator := range []rune{'+', '*', '|'} {
+		currentCombination = append(currentCombination, operator)
+		backtrack(operandsLength, currentCombination, combinations)
+		currentCombination = currentCombination[:len(currentCombination)-1]
 	}
 }
